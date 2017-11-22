@@ -11,6 +11,12 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
 
+  calculateSolutions();
+  displaySolutions();
+}
+
+void calculateSolutions(){
+  
   // initialise a pair of arrays to hold solutions - where -1 means "unused slot"
   for (int i=0;i<pcaps;i++) {
     possibleCaps[i] = -1;
@@ -55,7 +61,9 @@ void setup() {
   int validEntries = countValidEntries(possibleCaps, pcaps);
 
   doubleBubbleSort(possibleCaps, valueIndex, validEntries);
+}
 
+void displaySolutions(){
   Serial.println("***");
   Serial.println("For the capacitors, switched in by relays on D9 to D2, installed in that order:");
   for (int i=0;i<8;i++) {
