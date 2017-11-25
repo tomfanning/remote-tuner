@@ -183,18 +183,25 @@ int lookFor(int arr[], int arrLen, int lookFor){
   return -1;
 }
 
+int lastSensorValue=0;
+
+const int moveThreshold = 1;
+const int loopDelay = 50;
+
 void loop() {
 
-  delay(50);
+  delay(loopDelay);
   
   sensorValue = analogRead(A3);
 
-  scalingFactor = validEntries/1024.0;
 
-  scaled = sensorValue * scalingFactor;
-  
-  if (lastVal != scaled) {
+  if (diff(sensorValue, lastSensorValue) > moveThreshold) {
+    
+    lastSensorValue = sensorValue;
+    
+    scalingFactor = validEntries/1024.0;
 
+    scaled = sensorValue * scalingFactor;
     Serial.println(possibleCaps[scaled]);
 
     for (int bitNo=0;bitNo<8;bitNo++){
@@ -205,3 +212,9 @@ void loop() {
     lastVal = scaled;
   }
 }
+
+int diff(int a, int b) {
+  int d = b-a;
+  return abs(d);
+}
+

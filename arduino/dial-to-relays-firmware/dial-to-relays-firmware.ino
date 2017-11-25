@@ -9,6 +9,8 @@ void setup() {
 int sensorValue,scaled;
 
 void loop() {
+  delay(50);
+  
   sensorValue = analogRead(A3);
   scaled = sensorValue/4;
   
