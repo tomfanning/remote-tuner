@@ -1,11 +1,14 @@
+#include <SoftwareSerial.h>
+
 
 //            d2                       d9
 int caps[] = {330,220,100,100,33,27,20,18};
 
 int sensorValue, lastVal, scaled, validEntries;
 float scalingFactor;
-const int pcaps = 256;
+const int pcaps = 240;
 int possibleCaps[pcaps], valueIndex[pcaps];
+SoftwareSerial mySerial(10, 11); // RX, TX
 
 void setup() {
   Serial.begin(9600);
@@ -24,6 +27,8 @@ void setup() {
   Serial.println(")");
   
   sensorValue = analogRead(A3); // maybe garbage
+
+  mySerial.begin(9600);
 }
 
 void calculateSolutions(){
@@ -118,12 +123,14 @@ int roundFloat(float in) {
 void displaySolutions(){
   Serial.println("***");
   Serial.println("For the capacitors, switched in by relays on D9 to D2, installed in that order:");
+  Serial.print("** ");
   for (int i=0;i<8;i++) {
     Serial.print(caps[i]);
     Serial.print(" ");
   }
   Serial.println();
   Serial.println("the following capacitances can be made up:");
+  Serial.print("## ");
   for (int i=0;i<validEntries;i++) {
     Serial.print(possibleCaps[i]);
     Serial.print(" ");
@@ -183,38 +190,50 @@ int lookFor(int arr[], int arrLen, int lookFor){
   return -1;
 }
 
-int lastSensorValue=0;
-
-const int moveThreshold = 1;
-const int loopDelay = 50;
+String buf1 = "";
+String buf2 = "";
+char c;
 
 void loop() {
 
-  delay(loopDelay);
-  
-  sensorValue = analogRead(A3);
-
-
-  if (diff(sensorValue, lastSensorValue) > moveThreshold) {
-    
-    lastSensorValue = sensorValue;
-    
-    scalingFactor = validEntries/1024.0;
-
-    scaled = sensorValue * scalingFactor;
-    Serial.println(possibleCaps[scaled]);
-
-    for (int bitNo=0;bitNo<8;bitNo++){
-      int bitVal = bitRead(valueIndex[scaled], bitNo);
-      digitalWrite(bitNo+2, bitVal);
-    }
-
-    lastVal = scaled;
-  }
+  while (true) {  
+    // read a line of text from either the hardware serial port or d10/d11 software serial
+    if (mySerial.available()) {
+      c = mySerial.read();
+      if (c != '\r') {
+        if (c == '\n') {
+          processCommand(buf1);
+          buf1 = "";
+          break;
+        }
+        buf1 += c;
+      }
+    } else if (Serial.available()) {
+      c = Serial.read();
+      if (c != '\r') {
+        if (c == '\n') {
+          processCommand(buf2);
+          buf2 = "";
+          break;
+        }
+        buf2 += c;
+      }
+    } 
+  } 
 }
 
-int diff(int a, int b) {
-  int d = b-a;
-  return abs(d);
+void processCommand(String cmd) {
+  
+  int setting = cmd.toInt();
+
+  if (setting < validEntries && setting >= 0){
+
+    Serial.println(possibleCaps[setting]);
+
+    for (int bitNo=0;bitNo<8;bitNo++){
+      int bitVal = bitRead(valueIndex[setting], bitNo);
+      digitalWrite(bitNo+2, bitVal);
+    }
+  }
 }
 
