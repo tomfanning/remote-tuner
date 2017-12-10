@@ -31,53 +31,52 @@ void setup() {
   delay(500);
   cap1Serial.println("0");
 
-
   cap1Serial.listen();
 
-  int capsInstalled1[8];
-  int numInstalled1 = test(0, '*', capsInstalled1);
-  Serial.print("got caps installed 1: ");
-  Serial.println(numInstalled1);
+  bool go=true;
+  String line1,line2;
+  while (go) {
+    cap1Serial.println("q");
+    char arr[255];
+    int numChars = getLine(1000, arr);
+    if (numChars != 0) {
+      // we have a string
+      for (int i=0;i<numChars;i++) {
+        line1 += arr[i];
+        go=false;
+      }
+    }
+    if (!go) {
+      numChars = getLine(1000, arr);
+      for (int i=0;i<numChars;i++) {
+        line2 += arr[i];
+      }
+    }
+  }
 
-  int numCapsPossible1 = test(0, '#', capsPossible1);
-  Serial.print("got caps possible 1: ");
-  Serial.println(numCapsPossible1);
-
-
-  cap2Serial.listen();
-
-  int capsInstalled2[8];
-  int numInstalled2 = test(1, '*', capsInstalled2);
-  Serial.print("got caps installed 2: ");
-  Serial.println(numInstalled2);
-
-  int numCapsPossible2 = test(1, '#', capsPossible2);
-  Serial.print("got caps possible 2: ");
-  Serial.println(numCapsPossible2);
-
+  Serial.println(line1);
+  Serial.println(line2);
 
   Serial.println("setup ended");
 }
 
-int test(int port, char waitFor, int arr[]) {
-
+// Read a line from a serial port, within the specified timeout (ms), into the referenced array.
+// If a line (terminated in \n) has not been received within the timeout, return 0, else, return the number of chars on the line.
+int getLine(int timeout, char arr[]) {
+  long started;
+  int cur=0;
   while (true) {
-    if ((port == 0 && cap1Serial.available()) ||(port == 1 && cap2Serial.available()) ) {
-      char c; 
-      if (port == 0) {
-        c = cap1Serial.read();
-      } else {
-        c = cap2Serial.read();
-      }
-      
-      if (c == '\n') {
-        if (buf[0] == waitFor && buf[1] == waitFor) {
-          int result = parseInto(buf,arr);
-          buf = "";
-          return result;
+    started = millis();
+    cap1Serial.println("q");
+    while (millis() < started + timeout) {
+      if (cap1Serial.available()) {
+        int b = cap1Serial.read();
+        if (b == '\n') {
+          return cur;
         }
-      } else if (c != '\r'){
-        buf += c;
+        
+        arr[cur] = b;
+        cur++;
       }
     }
   }
@@ -123,15 +122,6 @@ int getCapsPossible(String line) {
   return 0;
 }
 
-//int setting;
-//int isetting;
-
 void loop() {
-  
-  //indSerial.println(isetting);
-  //cap1Serial.println(setting);
-  //cap2Serial.println(setting);
 
-  
-  
 }
