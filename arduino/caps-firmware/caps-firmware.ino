@@ -12,6 +12,8 @@ SoftwareSerial mySerial(10, 11); // RX, TX
 
 void setup() {
   Serial.begin(9600);
+  mySerial.begin(9600);
+  
   for (int i=2;i<=9;i++){
     pinMode(i, OUTPUT);
   }
@@ -26,9 +28,7 @@ void setup() {
   Serial.print(pcaps);
   Serial.println(")");
   
-  sensorValue = analogRead(A3); // maybe garbage
-
-  mySerial.begin(9600);
+  sensorValue = analogRead(A3); // maybe garbage 
 }
 
 void calculateSolutions(){
@@ -120,22 +120,47 @@ int roundFloat(float in) {
   return (int)(in+0.5);
 }
 
+void displaySolutionsSS(){
+
+  // out of the software serial port
+
+  // installed capacitors
+  mySerial.print("** ");
+  for (int i=0;i<8;i++) {
+    mySerial.print(caps[i]);
+    mySerial.print(" ");
+  }
+  mySerial.println();
+
+  // possible capacitances
+  mySerial.print("## ");
+  for (int i=0;i<validEntries;i++) {
+    mySerial.print(possibleCaps[i]);
+    mySerial.print(" ");
+  }
+  mySerial.println();
+}
+
 void displaySolutions(){
   Serial.println("***");
   Serial.println("For the capacitors, switched in by relays on D9 to D2, installed in that order:");
+  
   Serial.print("** ");
   for (int i=0;i<8;i++) {
     Serial.print(caps[i]);
     Serial.print(" ");
   }
   Serial.println();
+
   Serial.println("the following capacitances can be made up:");
+  
   Serial.print("## ");
   for (int i=0;i<validEntries;i++) {
     Serial.print(possibleCaps[i]);
     Serial.print(" ");
   }
   Serial.println();
+ 
   Serial.println("by setting:");
     for (int i=0;i<validEntries;i++) {
     Serial.print(valueIndex[i]);
@@ -223,6 +248,14 @@ void loop() {
 }
 
 void processCommand(String cmd) {
+
+  //Serial.print("processing ");
+  //Serial.println(cmd);
+
+  if (cmd == "q") {
+    displaySolutionsSS();
+    return;
+  } 
   
   int setting = cmd.toInt();
 
